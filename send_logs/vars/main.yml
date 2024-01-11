@@ -1,0 +1,4 @@
+---
+# vars file for send_logs
+filepath: /etc/httpd/logs/error_log
+filename: error_log

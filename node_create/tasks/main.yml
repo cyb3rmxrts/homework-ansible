@@ -1,0 +1,56 @@
+---
+# tasks file for node_create
+- name: launch ec2 instances
+  block:
+   
+    - name: make sure boto, boto3 and botocore installed
+      pip:
+          name: "{{ item }}"
+      loop:
+        - boto
+        - boto3
+        - botocore
+   
+    - name: create ec2 instances
+      ec2_instance:
+        name: gmworker-nodes
+        region: us-east-1
+        security_group: sg-0e673f30eb234d1ba
+        vpc_subnet_id: subnet-0d067f7efb26448ff
+        image_id: ami-0005e0cfe09cc9050
+        instance_type: t3.micro
+        key_name: gmansible
+        iam_instance_profile: arn:aws:iam::096280765184:instance-profile/gmarts-ansible-role
+        exact_count: 2
+        wait: true
+        network:
+          assign_public_ip: true
+        state: present
+        tags:
+          name: gavin-worker2
+      register: ec2
+      tags: gavin-worker2
+    
+    - name: wait for port 22 to be ready
+      local_action:
+        module: wait_for
+        host: "{{ item.public_ip_address }}"
+        port: 22
+        delay: 10
+        timeout: 240
+      when: ec2.changed == true
+      loop: "{{ ec2.instances }}"
+    
+    - name: determine number of instances
+      set_fact:
+        instance_ids_count: "{{ec2.instances | length }}"
+    
+    - name: instance IDs
+      debug:
+        msg: "{{ item }}"
+      loop: "{{ ec2.instance_ids }}"
+    
+    - name: number of running instances
+      debug:
+        msg: "{{ instance_ids_count }}"
+  tags: ['never', 'create']

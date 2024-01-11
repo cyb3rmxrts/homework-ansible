@@ -1,0 +1,11 @@
+---
+- name: Create Nodes and Bucket
+  hosts: tags_Name_g*
+  gather_facts: true
+  become: true
+  vars_files:
+    - "vars.yaml"
+
+  roles:
+    - send_logs
+
